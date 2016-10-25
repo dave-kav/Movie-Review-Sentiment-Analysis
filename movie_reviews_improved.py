@@ -5,13 +5,31 @@ Created on Thu Oct 20 09:20:50 2016
 @author: davyk
 """
 import os
+import nltk
 import numpy as np
+from nltk import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
 
+def clean_words(words):
+    lemmatizer = WordNetLemmatizer()
+    lemmed_words = []
+    for w in words: 
+        lemmed_words.append(lemmatizer.lemmatize(w))
+    stop_words = set(stopwords.words("english"))
+    filtered_words = []
+    for word in lemmed_words:
+        if word not in stop_words:
+            filtered_words.append(word)
+    return filtered_words
+        
 def get_words_in_file(text_file):
     my_file = open(text_file, "r")
-    file_contents = my_file.read()    
-    return file_contents.split()
-
+    file_contents = my_file.read()
+    lower_words = file_contents.lower()
+    words = word_tokenize(lower_words.decode("utf8"))
+    return clean_words(words)
+    
 def update_vocabulary(vocabulary, word):
     if word not in vocabulary:
         vocabulary[word] = 1
@@ -100,5 +118,8 @@ def main():
     print "Accuracy in predicting positive documents:", positive_accuracy, "%"
     print "Accuracy in predicting negative documents:", negative_accuracy, "%"
     print "Average accuracy:", average_accuracy, "%"
-        
+    
+    print vocab["expands"], pos_vocab["expands"], neg_vocab["expands"]
+    print "Unique words: ", len(vocab)
+    
 main()
