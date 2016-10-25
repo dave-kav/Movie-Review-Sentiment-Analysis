@@ -54,10 +54,10 @@ def calculate_conditional_probability(vocab, dividend):
         probabilities[word] = np.log(float(count_w_c) / dividend)
     return probabilities
 
-def classify_documents(path, predict_probabilities, other_probabilities, prior_probability):
+def classify_documents(path, predict_probabilities, other_probabilities, prior_probability, label):
     file_list = os.listdir(path)
-    correct_predict = 0
-    incorrect_predict = 0
+    correct_predict = 0.0
+    incorrect_predict = 0.0
     for my_file in file_list:
         predicted = 0.0
         other = 0.0
@@ -71,7 +71,11 @@ def classify_documents(path, predict_probabilities, other_probabilities, prior_p
             correct_predict = correct_predict + 1
         else:
             incorrect_predict = incorrect_predict + 1
-    return (float(correct_predict)/(correct_predict + incorrect_predict))*100
+    print "Num", label, correct_predict
+    print "Num not", label, incorrect_predict
+    
+    percentage = (correct_predict / (correct_predict + incorrect_predict)) * 100
+    return percentage
         
 def main():
     paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
@@ -90,11 +94,13 @@ def main():
     print "done!"
     
     test_paths = ["smallTest\\pos\\", "smallTest\\neg\\"]
-    positive_accuracy = classify_documents(test_paths[0], pos_probabilities, neg_probabilities, prior_probability)
-    negative_accuracy = classify_documents(test_paths[1], neg_probabilities, pos_probabilities, prior_probability)
+    positive_accuracy = classify_documents(test_paths[0], pos_probabilities, neg_probabilities, prior_probability, "Positive")
+    negative_accuracy = classify_documents(test_paths[1], neg_probabilities, pos_probabilities, prior_probability, "Negative")
     average_accuracy = (float(positive_accuracy) + negative_accuracy) / 2
-    print "Accuracy in predicting positive documents:", positive_accuracy
-    print "Accuracy in predicting negative documents:", negative_accuracy
-    print "Average accuracy:", average_accuracy
-
+    print "Accuracy in predicting positive documents:", positive_accuracy, "%"
+    print "Accuracy in predicting negative documents:", negative_accuracy, "%"
+    print "Average accuracy:", average_accuracy, "%"
+    
+    print prior_probability
+    
 main()
