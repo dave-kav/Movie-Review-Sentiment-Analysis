@@ -2,40 +2,61 @@
 """
 Created on Thu Oct 20 09:20:50 2016
 
-@author: davyk
+@author: Dave Kavanagh - R00013469
 """
+
 import os
-import nltk
 import numpy as np
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 
-def clean_words(words):
+#return combinations of adjacent words
+def get_ngrams(words, n):
+    for i in range(len(words)-n+1):
+        bigram = ' '.join(words[i:i+n])
+        words.append(bigram)
+    return words
+
+#clean up vocabulary
+def clean_words(contents):
+    #split words
+    words = word_tokenize(contents.decode("utf8"))
+
+    #lemmatize words    
     lemmatizer = WordNetLemmatizer()
-    lemmed_words = []
+    lemmed_words = [] 
     for w in words: 
         lemmed_words.append(lemmatizer.lemmatize(w))
+    
+    #remove stop words
     stop_words = set(stopwords.words("english"))
     filtered_words = []
     for word in lemmed_words:
         if word not in stop_words:
             filtered_words.append(word)
-    return filtered_words
+    
+    #add in combinations of adjacent words
+    words_with_bigrams = get_ngrams(filtered_words, 2)
+    words_with_trigrams = get_ngrams(words_with_bigrams, 3)
+    
+    return words_with_trigrams
         
+#return all words in a file, calls clean_words function to process vocabulary
 def get_words_in_file(text_file):
     my_file = open(text_file, "r")
     file_contents = my_file.read()
-    lower_words = file_contents.lower()
-    words = word_tokenize(lower_words.decode("utf8"))
-    return clean_words(words)
-    
+    file_contents = file_contents.lower()
+    return clean_words(file_contents)
+
+#updates values in a dictionary
 def update_vocabulary(vocabulary, word):
     if word not in vocabulary:
         vocabulary[word] = 1
     else:
         vocabulary[word] = vocabulary[word] + 1
 
+#build main vocabulary of unique words
 def build_vocab(paths):
     vocab = {}
     for path in paths:
@@ -46,6 +67,7 @@ def build_vocab(paths):
                 update_vocabulary(vocab, word)
     return vocab
 
+#builds word frequencies for posiive and negative vocabularies
 def build_sub_vocabs(vocab, paths):
     neg_vocab = {}
     pos_vocab = {}
@@ -60,11 +82,13 @@ def build_sub_vocabs(vocab, paths):
         neg_vocab[word] = unique_neg[word]
     return pos_vocab, neg_vocab
 
+#used in naive bayes algorithm
 def calculate_prior_probability(predicted_class_count, other_class_count):
     total = predicted_class_count + other_class_count
     prior_probability = np.log(float(predicted_class_count)/total)
     return prior_probability
-    
+
+#used in naive bayes algorithm
 def calculate_conditional_probability(vocab, dividend):
     probabilities = {}
     for word in vocab:
@@ -72,6 +96,7 @@ def calculate_conditional_probability(vocab, dividend):
         probabilities[word] = np.log(float(count_w_c) / dividend)
     return probabilities
 
+#implement naive bayes to classify reviews
 def classify_documents(path, predict_probabilities, other_probabilities, prior_probability, label):
     file_list = os.listdir(path)
     correct_predict = 0.0
@@ -98,7 +123,7 @@ def classify_documents(path, predict_probabilities, other_probabilities, prior_p
 def main():
     paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
     
-    print "Building vocabulary...",
+    print "Building vocabulary, this may take a while...",
     vocab = build_vocab(paths)
     pos_vocab, neg_vocab = build_sub_vocabs(vocab, paths)
     print "done!"
@@ -112,6 +137,7 @@ def main():
     print "done!"
     
     test_paths = ["smallTest\\pos\\", "smallTest\\neg\\"]
+    print "Classifying reviews...\n",
     positive_accuracy = classify_documents(test_paths[0], pos_probabilities, neg_probabilities, prior_probability, "Positive")
     negative_accuracy = classify_documents(test_paths[1], neg_probabilities, pos_probabilities, prior_probability, "Negative")
     average_accuracy = (float(positive_accuracy) + negative_accuracy) / 2
@@ -119,7 +145,6 @@ def main():
     print "Accuracy in predicting negative documents:", negative_accuracy, "%"
     print "Average accuracy:", average_accuracy, "%"
     
-    print vocab["expands"], pos_vocab["expands"], neg_vocab["expands"]
     print "Unique words: ", len(vocab)
     
 main()
