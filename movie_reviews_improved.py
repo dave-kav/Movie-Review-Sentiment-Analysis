@@ -44,11 +44,11 @@ def clean_words(contents):
             filtered_words.append(word)
             
     #remove punctuation
-    punctuations = set(string.punctuation)
-    words_without_punctuation = [w for w in filtered_words if w not in punctuations]
+    #punctuations = set(string.punctuation)
+    #words_without_punctuation = [w for w in filtered_words if w not in punctuations]
     
     #add in combinations of adjacent words
-    words_with_bigrams = get_ngrams(words_without_punctuation, 2)
+    words_with_bigrams = get_ngrams(filtered_words, 2)
     words_with_trigrams = get_ngrams(words_with_bigrams, 3)
     
     return words_with_trigrams
