@@ -6,10 +6,14 @@ Created on Thu Oct 20 09:20:50 2016
 """
 
 import os
+import re
+import nltk
+import string
 import numpy as np
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from collections import defaultdict
 
 #return combinations of adjacent words
 def get_ngrams(words, n):
@@ -20,9 +24,12 @@ def get_ngrams(words, n):
 
 #clean up vocabulary
 def clean_words(contents):
+    #remove html tags
+    contents = re.sub('<[^>]*>', '', contents)    
+    
     #split words
     words = word_tokenize(contents.decode("utf8"))
-
+    
     #lemmatize words    
     lemmatizer = WordNetLemmatizer()
     lemmed_words = [] 
@@ -35,9 +42,13 @@ def clean_words(contents):
     for word in lemmed_words:
         if word not in stop_words:
             filtered_words.append(word)
+            
+    #remove punctuation
+    punctuations = set(string.punctuation)
+    words_without_punctuation = [w for w in filtered_words if w not in punctuations]
     
     #add in combinations of adjacent words
-    words_with_bigrams = get_ngrams(filtered_words, 2)
+    words_with_bigrams = get_ngrams(words_without_punctuation, 2)
     words_with_trigrams = get_ngrams(words_with_bigrams, 3)
     
     return words_with_trigrams
@@ -46,6 +57,7 @@ def clean_words(contents):
 def get_words_in_file(text_file):
     my_file = open(text_file, "r")
     file_contents = my_file.read()
+    my_file.close()
     file_contents = file_contents.lower()
     return clean_words(file_contents)
 
@@ -123,7 +135,7 @@ def classify_documents(path, predict_probabilities, other_probabilities, prior_p
 def main():
     paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
     
-    print "Building vocabulary, this may take a while...",
+    print "Building vocabulary, please be patient, this may take a number of minutes...",
     vocab = build_vocab(paths)
     pos_vocab, neg_vocab = build_sub_vocabs(vocab, paths)
     print "done!"
@@ -146,5 +158,8 @@ def main():
     print "Average accuracy:", average_accuracy, "%"
     
     print "Unique words: ", len(vocab)
+    
+    freq_dist = nltk.FreqDist(vocab)
+    print freq_dist.most_common(20)
     
 main()
