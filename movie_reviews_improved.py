@@ -13,7 +13,6 @@ import numpy as np
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-from collections import defaultdict
 
 #return combinations of adjacent words
 def get_ngrams(words, n):
@@ -51,7 +50,7 @@ def clean_words(contents):
     words_with_bigrams = get_ngrams(filtered_words, 2)
     words_with_trigrams = get_ngrams(words_with_bigrams, 3)
     
-    return words_with_trigrams
+    return set(words_with_trigrams)
         
 #return all words in a file, calls clean_words function to process vocabulary
 def get_words_in_file(text_file):
@@ -132,9 +131,7 @@ def classify_documents(path, predict_probabilities, other_probabilities, prior_p
     percentage = (correct_predict / (correct_predict + incorrect_predict)) * 100
     return percentage
         
-def main():
-    paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
-    
+def naive_bayes(paths):
     print "Building vocabulary, please be patient, this may take a number of minutes...",
     vocab = build_vocab(paths)
     pos_vocab, neg_vocab = build_sub_vocabs(vocab, paths)
@@ -157,9 +154,14 @@ def main():
     print "Accuracy in predicting negative documents:", negative_accuracy, "%"
     print "Average accuracy:", average_accuracy, "%"
     
-    print "Unique words: ", len(vocab)
+    print "Unique words:", len(vocab)
+    print vocab["not good"], pos_vocab["not good"], neg_vocab["not good"]
+        
+    #freq_dist = nltk.FreqDist(vocab)
+    #print freq_dist.most_common(20)
     
-    freq_dist = nltk.FreqDist(vocab)
-    print freq_dist.most_common(20)
+def main():
+    paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
+    naive_bayes(paths)
     
 main()

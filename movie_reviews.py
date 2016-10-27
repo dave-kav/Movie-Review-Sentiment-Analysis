@@ -10,7 +10,7 @@ import numpy as np
 #return all words in a file, calls clean_words function to process vocabulary
 def get_words_in_file(text_file):
     my_file = open(text_file, "r")
-    file_contents = my_file.read()    
+    file_contents = my_file.read()
     return file_contents.split()
 
 #updates values in a dictionary
@@ -47,13 +47,13 @@ def build_sub_vocabs(vocab, paths):
     return pos_vocab, neg_vocab
 
 #used in naive bayes algorithm
-def calculate_prior_probability(predicted_class_count, other_class_count):
-    total = predicted_class_count + other_class_count
-    prior_probability = np.log(float(predicted_class_count)/total)
+def calculate_prior_probability(predicted_class_count, total_class_count):
+    prior_probability = np.log(float(predicted_class_count)/total_class_count)
     return prior_probability
 
 #used in naive bayes algorithm    
-def calculate_conditional_probability(vocab, dividend):
+def calculate_conditional_probability(vocab, count_c, v) :
+    dividend = count_c + v
     probabilities = {}
     for word in vocab:
         count_w_c = vocab[word] + 1
@@ -84,9 +84,7 @@ def classify_documents(path, predict_probabilities, other_probabilities, prior_p
     percentage = (correct_predict / (correct_predict + incorrect_predict)) * 100
     return percentage
         
-def main():
-    paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
-    
+def naive_bayes(paths):
     print "Building vocabulary...",
     vocab = build_vocab(paths)
     pos_vocab, neg_vocab = build_sub_vocabs(vocab, paths)
@@ -95,9 +93,10 @@ def main():
     print "Calculating probabilites...",
     num_pos_rvws = len(os.listdir(paths[0]))
     num_neg_rvws = len(os.listdir(paths[1]))
-    prior_probability = calculate_prior_probability(num_pos_rvws, num_neg_rvws)
-    pos_probabilities = calculate_conditional_probability(pos_vocab, sum(pos_vocab.values()) + len(vocab))
-    neg_probabilities = calculate_conditional_probability(neg_vocab, sum(neg_vocab.values()) + len(vocab))
+    num_total_reviews = num_neg_rvws + num_pos_rvws;
+    prior_probability = calculate_prior_probability(num_pos_rvws, num_total_reviews)
+    pos_probabilities = calculate_conditional_probability(pos_vocab, sum(pos_vocab.values()), len(vocab))
+    neg_probabilities = calculate_conditional_probability(neg_vocab, sum(neg_vocab.values()), len(vocab))
     print "done!"
     
     test_paths = ["smallTest\\pos\\", "smallTest\\neg\\"]
@@ -109,4 +108,8 @@ def main():
     print "Average accuracy:", average_accuracy, "%"
     print len(vocab)
         
+def main():
+    paths = ["LargeIMDB\\pos\\", "LargeIMDB\\neg\\"]
+    naive_bayes(paths)
+    
 main()
